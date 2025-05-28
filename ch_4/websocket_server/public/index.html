@@ -1,0 +1,41 @@
+<h1> Communicating with WebSockets</h1>
+
+<input id="msg"/>
+    <button id="send">Send</button>
+<div id="output"></div>
+
+<!-- Javascript code executed inide the browser -->
+<script>
+
+    // create a connection to the websocket server 
+    // providing the endpoint that the ws object is listening to 
+    const ws=new WebSocket('ws://localhost:3000');
+    const output = document.getElementById('output')
+    const send= document.getElementById('send');
+
+    send.addEventListener('click', ()=>{
+        const msg=document.getElementById('msg').value; //  document,getElementById - would linting have been helpful here?
+        // we send the message 
+        ws.send(msg);
+        output.innerHTML+=log('Send', msg);
+    });
+
+    function log(event,msg){
+        return '<p>' + event + ':' + msg + '</p>';
+    }
+
+    // registered event listener functions 
+
+    // executes whenever a message is recieved 
+    ws.onmessage=function(e){
+        output.innerHTML+=log('Recieved', e.data); // logged on the page
+    };
+
+    ws.onclose=function(e){
+        output.innerHTML+=log('Disconnected', e.code); // logged on the page
+    }
+
+    ws.onerror=function(e){
+        output.innetHTML+=log('Error', e.data); // logged on the page
+    }
+</script>
