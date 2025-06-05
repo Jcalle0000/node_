@@ -1,6 +1,8 @@
 // node server.js
 
 import {fastify} from 'fastify';
+// what does this do?
+
 import appPlugin, {options} from './app.js'; // 
 // we import the app.js file and use the options object to
 // instantiate the root application
