@@ -1,0 +1,23 @@
+npx express-generator --no-view benchmarking-http // creates the directory benchmarking-http
+npm install - to install all the libraries from package.json
+npm start - this will start the server
+
+in another terminal: 
+autocannon --connections 100 http://localhost:3000
+
+
+ node post_server.js
+
+
+jasoncalle@MacBookPro ch_10 % 
+npx express-generator --views=pug benchmarking_views
+- this chapter is to show how production environment can show differnt performance
+due to different optiomzations 
+
+
+jasoncalle@MacBookPro ch_10 % npx express-generator --views=pug flamegraph_app
+- use ox tool to profile server and generate flamge graph
+- open package.json
+0x ./bin/www
+ctrl c : 🔥  Process exited, generating flamegraph
+ 

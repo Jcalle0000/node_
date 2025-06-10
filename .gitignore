@@ -1,1 +1,7 @@
 **/node_modules/
+**/coverage/
+
+
+ch_5/temperature/
+ch_8/testing_with_jest/coverage/
+

@@ -20,6 +20,7 @@ function recipesPlugin(app,opts,next){
         handler:menuHandler
     });
 
+
     // app.get('/menu', {handler:menuHandler})// duplicate
     // curl http://localhost:3000/recipes   
     app.get('/recipes',{handler:menuHandler});
@@ -27,24 +28,96 @@ function recipesPlugin(app,opts,next){
     //  curl -X DELETE http://localhost:3000/recipes/32232
     // app.delete('/recipes/:id',{handler:menuHandler});
 
-    // is this to have authentication on every page?
-    app.register(async function protectRoutesPlugin(plugin,opts){
-        plugin.addHook('onRequest', plugin.authOnlyChef);
-        
-        plugin.post('/recipes', async function addToMenu(request,reply){
-            throw new Error('Not Implemented plugin');
-        });
+    const jsonSchemaBody = {
+        type:'object', // could this be other types?
+        required : ['name', 'country', 'order', 'price' ],
+        properties:{
+            name:{type:'string', minLength:3, maxLength:50},
+            country:{type:'string', enum: ['ITA','IND']},
+            description:{type:'string'},
+            order:{type:'number', minimum:0, maximum:100},
+            price:{type:'number', minimum:0, maximum:50 }
+        },
+    };
 
+    //  curl -X POST http://localhost:3000/recipes -H "Content-Type: application/json" -H "x-api-key: fastify-rocks" -d '{"name":"Lasagna","country":"ITA","price":12,"order":1}'
 
-        //  curl -X DELETE http://localhost:3000/recipes/32232
-        // {"statusCode":401,"error":"Unauthorized","message":"Invalid API key"}%
-        
-        plugin.delete('/recipes/:id', function removeFromMenu(request,reply){
-            reply.send(new Error('Not Implemented'));
-        });
+    app.post('/recipes',
+        // can we just pass parameters? 
+    {
+        config:{ auth:true },
+        schema:{
+            body:jsonSchemaBody // used to validate request.body
+        },
+        handler:async function addToMenu(request,reply){
 
-        next();
+            console.log('hello')
+            // reply.send(new Error('Not implemented'))
+            const {name, country, description, order, price} = request.body;
+
+            const newPlateId=await app.source.insertRecipe({ // defined in datasource.js
+                name,
+                country,
+                description,
+                order,
+                price,
+                createdAt:new Date()
+            });
+
+            // console.log(newPlateId)
+            console.log('inserted recipe id:', newPlateId);
+
+            reply.code(201)
+            return { id: newPlateId }
+        }
     });
+
+    //  curl -H "x-api-key:fastify-rocks" -X DELETE http://localhost:3000/recipes/6844ae28a94d0a21d16de79c
+    // we see a status code of 204 but the id still remain 
+    app.delete('/recipes/:id',{
+        config:{auth:true},
+
+        schema:{
+            params:{
+                type:'object',
+                properties:{
+                    id:{type:'string', minLength:24, maxLength:24}
+                }
+            }
+        },
+
+        handler: async function removeFromMenu(request,reply){ // this is declared async to use await within the function
+            // reply.send(new Error('not implemented') );
+            const {id} = request.params;
+            const [recipe]=await app.source.readRecipes({id});
+            if(!recipe){
+                reply.code(404);
+                throw new Error('recipe not found')
+            }
+            await app.source.deleteRecipe(id);
+            console.log('deleted', id)
+            reply.code(204);
+        }
+    });
+
+    // is this to have authentication on every page?
+    // app.register(async function protectRoutesPlugin(plugin,opts){
+    //     plugin.addHook('onRequest', plugin.authOnlyChef);
+        
+    //     plugin.post('/recipes', async function addToMenu(request,reply){
+    //         throw new Error('Not Implemented plugin');
+    //     });
+
+
+    //     //  curl -X DELETE http://localhost:3000/recipes/32232
+    //     // {"statusCode":401,"error":"Unauthorized","message":"Invalid API key"}%
+        
+    //     plugin.delete('/recipes/:id', function removeFromMenu(request,reply){
+    //         reply.send(new Error('Not Implemented'));
+    //     });
+
+    //     next();
+    // });
 
 //  curl -X POST http://localhost:3000/recipes
     // moved into protected routes
@@ -70,10 +143,13 @@ function recipesPlugin(app,opts,next){
 
 // define a named function
 async function menuHandler(request,reply){
-    this.log.info('Logging GET /menu from this'); // this is equivalent to the app variable,
-    //  granting acces to all the servers resource
-    request.log.info('Logging GET /menu from request');
-    throw new Error('Not implemented-recipes');
+    // this.log.info('Logging GET /menu from this'); // this is equivalent to the app variable,
+    // //  granting acces to all the servers resource
+    // request.log.info('Logging GET /menu from request');
+    // throw new Error('Not implemented-recipes');
+
+    const recipes = await this.source.readRecipes();
+    return recipes; 
 }
 
 // what does it mean to export as a default?
