@@ -7,7 +7,7 @@ const numberOfValues= 1000;
 const values = [];
 
 for(let count=0; count< numberOfValues ; count++){
-    values.push({ value: Math.round(Math.random*10000) })
+    values.push({ value: Math.round(Math.random()*10000) })
 }
 
 async function main(){
@@ -16,7 +16,7 @@ async function main(){
         await client.connect();
         const db = client.db('data');
         await db.collection('values').insertMany(values);
-        console.log(`Added ${numberOfValues} random values`);
+        console.log(`Added ${numberOfValues} random values`); 
         
     }catch(err){
         console.log(err)
