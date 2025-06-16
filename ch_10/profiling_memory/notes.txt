@@ -1,0 +1,9 @@
+mkdir profiling_memory && cd profiling_memory
+npm install --global autocannon
+npm init --yes
+
+# create leaky_server.json
+node --max-old-space-size=10 leaky_server.js
+autocannon http://localhost:3000 # this will crash the server that we just launched
+
+node --inspect leaky_server.js # restarting server

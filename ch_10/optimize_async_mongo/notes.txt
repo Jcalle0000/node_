@@ -1,0 +1,4 @@
+# initialize mongo db database
+
+docker run --publish 27017:27017 --name node-mongo --detach mongo:7
+node values.js # populate the database
